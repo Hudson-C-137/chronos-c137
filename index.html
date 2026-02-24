@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planejador Semanal - Tema Cinza</title>
+  <style>
+    :root {
+      --bg: #0e0e0e;
+      --bg-sec: #1a1a1a;
+      --bg-ter: #2a2a2a;
+      --txt: #e3e3e3;
+      --accent: #888888;
+      --hover: #202020;
+    }
+
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--txt);
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      height: 100vh;
+    }
+
+    .menu {
+      width: 240px;
+      background-color: var(--bg-sec);
+      border-right: 1px solid var(--bg-ter);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: fixed;
+      height: 100%;
+      left: 0;
+      top: 0;
+      transition: transform 0.3s ease;
+      z-index: 3;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.4);
+    }
+
+    .menu.oculto { transform: translateX(-100%); }
+
+    .menu header {
+      padding: 15px;
+      font-size: 18px;
+      border-bottom: 1px solid var(--bg-ter);
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .menu button {
+      background: none;
+      border: none;
+      color: var(--txt);
+      padding: 12px;
+      text-align: left;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-size: 15px;
+    }
+
+    .menu button:hover { background-color: var(--hover); }
+
+    .menu-footer {
+      padding: 10px;
+      border-top: 1px solid var(--bg-ter);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu-toggle {
+      position: fixed;
+      left: 10px;
+      top: 10px;
+      z-index: 4;
+      background: var(--bg-ter);
+      border: none;
+      color: var(--txt);
+      font-size: 20px;
+      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(0,0,0,0.4);
+    }
+
+    .conteudo {
+      margin-left: 260px;
+      flex: 1;
+      padding: 20px;
+      overflow: hidden;
+      transition: margin-left 0.3s ease;
+    }
+
+    .conteudo.expandido { margin-left: 0; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 6px 8px;
+      background-color: var(--bg-sec);
+      border: 1px solid var(--bg-ter);
+      color: var(--txt);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .topo {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+
+    .mini-calendario {
+      background-color: var(--bg-sec);
+      border-radius: 12px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(7, 32px);
+      gap: 5px;
+      justify-content: center;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .mini-calendario div {
+      text-align: center;
+      padding: 6px;
+      border-radius: 5px;
+      transition: 0.2s;
+      font-size: 13px;
+    }
+
+    .mini-calendario .ativo {
+      background-color: rgba(136,136,136,0.4);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .semanas {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .semanas button {
+      background-color: var(--bg-ter);
+      border: none;
+      padding: 8px 18px;
+      color: var(--txt);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .semanas button:hover,
+    .semanas .ativo {
+      background-color: var(--accent);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .semana-view {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .dia {
+      background-color: var(--bg-sec);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      box-shadow: 0 0 6px rgba(0,0,0,0.3);
+    }
+
+    .dia h3 {
+      margin: 0 0 10px 0;
+      font-size: 15px;
+      color: var(--accent);
+    }
+
+    .dia button {
+      background-color: var(--bg-ter);
+      color: var(--txt);
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .dia button:hover {
+      background-color: var(--accent);
+      color: #fff;
+    }
+
+    .contador-dia {
+      font-size: 13px;
+      color: var(--accent);
+      margin-top: 6px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      display: none;
+    }
+
+    .popup-conteudo {
+      background-color: var(--bg-sec);
+      padding: 20px;
+      border-radius: 10px;
+      width: 480px;
+      max-height: 80%;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+    }
+
+    .popup-conteudo h2 { margin-top: 0; color: var(--accent); }
+
+    .popup-conteudo button.fechar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--txt);
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .tarefa {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--bg-ter);
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-top: 6px;
+    }
+
+    .feito-texto {
+      text-decoration: line-through;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu" id="menu">
+    <header>Menu</header>
+    <div class="menu-footer">
+      <button onclick="backup()">Backup</button>
+      <button onclick="importar()">Importar</button>
+    </div>
+  </div>
+
+  <button class="menu-toggle" id="menuBtn" onclick="toggleMenu()">☰</button>
+
+  <div class="conteudo" id="conteudo">
+    <header>
+      <label>Mês:</label>
+      <select id="mes" onchange="atualizarSemanas()"></select>
+      <label>Ano:</label>
+      <select id="ano" onchange="atualizarSemanas()"></select>
+    </header>
+
+    <div class="topo">
+      <div class="mini-calendario" id="mini-calendario"></div>
+      <div class="semanas" id="semanas"></div>
+    </div>
+
+    <div id="semana-view" class="semana-view"></div>
+  </div>
+
+  <div class="popup" id="popup">
+    <div class="popup-conteudo">
+      <button class="fechar" onclick="fecharPopup()">×</button>
+      <h2 id="titulo-dia"></h2>
+      <div id="tarefas"></div>
+      <div id="contador-tarefas">Quantidade de tarefas: 0</div>
+      <div style="margin-top:10px;">
+        <input type="text" id="nova-tarefa" placeholder="Nova tarefa...">
+        <button class="add" onclick="adicionarTarefa()">Adicionar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    const nomesDias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+    let dados = {};
+    let diaSelecionado = null;
+
+    window.onload = () => {
+      const mesSelect = document.getElementById("mes");
+      meses.forEach((m, i) => mesSelect.innerHTML += `<option value="${i}">${m}</option>`);
+      const anoSelect = document.getElementById("ano");
+      const anoAtual = new Date().getFullYear();
+      for(let a = anoAtual - 3; a <= anoAtual + 3; a++){
+        anoSelect.innerHTML += `<option value="${a}">${a}</option>`;
+      }
+      mesSelect.value = new Date().getMonth();
+      anoSelect.value = anoAtual;
+      carregar();
+      atualizarSemanas();
+    };
+
+    function atualizarSemanas() {
+      const mes = parseInt(document.getElementById("mes").value);
+      const ano = parseInt(document.getElementById("ano").value);
+      const semanasDiv = document.getElementById("semanas");
+      semanasDiv.innerHTML = "";
+      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+      const totalSemanas = Math.ceil((ultimoDia + new Date(ano, mes, 1).getDay()) / 7);
+      for (let i = 1; i <= totalSemanas; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = "Semana " + i;
+        btn.onclick = () => selecionarSemana(i);
+        semanasDiv.appendChild(btn);
+      }
+      gerarMiniCalendario();
+      document.getElementById("semana-view").innerHTML = "";
+    }
+
+    function gerarMiniCalendario() {
+      const mes = parseInt(document.getElementById("mes").value);
+      const ano = parseInt(document.getElementById("ano").value);
+      const calendario = document.getElementById("mini-calendario");
+      calendario.innerHTML = "";
+      nomesDias.forEach(d => {
+        const div = document.createElement("div");
+        div.innerHTML = `<b>${d[0]}</b>`;
+        calendario.appendChild(div);
+      });
+      const primeiroDia = new Date(ano, mes, 1).getDay();
+      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+      for(let i = 0; i < primeiroDia; i++) calendario.appendChild(document.createElement("div"));
+      for(let d = 1; d <= ultimoDia; d++){
+        const div = document.createElement("div");
+        div.textContent = d;
+        div.id = `cal-dia-${d}`;
+        calendario.appendChild(div);
+      }
+    }
+
+    function selecionarSemana(semana) {
+      const botoes = document.querySelectorAll(".semanas button");
+      botoes.forEach(btn => btn.classList.remove("ativo"));
+      botoes[semana - 1].classList.add("ativo");
+
+      const mes = parseInt(document.getElementById("mes").value);
+      const ano = parseInt(document.getElementById("ano").value);
+      const primeiroDia = new Date(ano, mes, 1);
+      const ultimoDia = new Date(ano, mes + 1, 0).getDate();
+
+      let semanas = [], semanaAtual = [];
+      for(let i = 1; i <= ultimoDia; i++){
+        const data = new Date(ano, mes, i);
+        semanaAtual.push(i);
+        if(data.getDay() === 6 || i === ultimoDia){
+          semanas.push(semanaAtual);
+          semanaAtual = [];
+        }
+      }
+
+      document.querySelectorAll(".mini-calendario div").forEach(div => div.classList.remove("ativo"));
+      (semanas[semana-1] || []).forEach(d => document.getElementById(`cal-dia-${d}`)?.classList.add("ativo"));
+      renderizarSemana(semanas[semana-1] || []);
+    }
+
+    function renderizarSemana(dias){
+      const view = document.getElementById("semana-view");
+      view.innerHTML = "";
+      dias.forEach(dia => {
+        const div = document.createElement("div");
+        div.className = "dia";
+        const data = new Date(parseInt(document.getElementById("ano").value), parseInt(document.getElementById("mes").value), dia);
+        const chave = `${document.getElementById("ano").value}-${document.getElementById("mes").value}-${dia}`;
+        const qtd = (dados[chave] || []).length;
+        div.innerHTML = `
+          <h3>${dia} - ${nomesDias[data.getDay()]}</h3>
+          <button onclick="abrirPopup(${dia})">Adicionar Tarefa</button>
+          <div class="contador-dia" id="contador-${chave.replaceAll('-','_')}">Tarefas: ${qtd}</div>
+        `;
+        view.appendChild(div);
+      });
+    }
+
+    function abrirPopup(dia){
+      diaSelecionado = dia;
+      document.getElementById("titulo-dia").textContent = `Tarefas do dia ${dia}`;
+      renderizarTarefas();
+      document.getElementById("popup").style.display = "flex";
+    }
+
+    function fecharPopup(){
+      document.getElementById("popup").style.display = "none";
+      atualizarContadores();
+    }
+
+    function renderizarTarefas(){
+      const tarefasDiv = document.getElementById("tarefas");
+      tarefasDiv.innerHTML = "";
+      const chave = obterChaveDia();
+      const lista = dados[chave] || [];
+      lista.forEach((t, i)=>{
+        const div = document.createElement("div");
+        div.className = "tarefa";
+        const span = document.createElement("span");
+        span.textContent = t.texto;
+        if(t.feito) span.classList.add("feito-texto");
+        const botoes = document.createElement("div");
+        const b1 = document.createElement("button");
+        b1.textContent = "Feito";
+        b1.onclick = ()=>{t.feito = true; salvar(); renderizarTarefas();};
+        const b2 = document.createElement("button");
+        b2.textContent = "Excluir";
+        b2.onclick = ()=>{lista.splice(i,1); salvar(); renderizarTarefas();};
+        botoes.append(b1,b2);
+        div.append(span,botoes);
+        tarefasDiv.appendChild(div);
+      });
+      document.getElementById("contador-tarefas").textContent = `Quantidade de tarefas: ${lista.length}`;
+    }
+
+    function adicionarTarefa(){
+      const input = document.getElementById("nova-tarefa");
+      if(!input.value.trim()) return;
+      const chave = obterChaveDia();
+      if(!dados[chave]) dados[chave] = [];
+      dados[chave].push({texto: input.value.trim(), feito: false});
+      input.value = "";
+      salvar();
+      renderizarTarefas();
+    }
+
+    function obterChaveDia(){
+      return `${document.getElementById("ano").value}-${document.getElementById("mes").value}-${diaSelecionado}`;
+    }
+
+    function salvar(){ localStorage.setItem("planejador", JSON.stringify(dados)); }
+
+    function carregar(){ dados = JSON.parse(localStorage.getItem("planejador") || "{}"); }
+
+    function atualizarContadores(){
+      for (let chave in dados){
+        const el = document.getElementById(`contador-${chave.replaceAll('-','_')}`);
+        if(el) el.textContent = `Tarefas: ${dados[chave].length}`;
+      }
+    }
+
+    function backup(){
+      const blob = new Blob([JSON.stringify(dados)], {type: "application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "backup_planejador.json";
+      a.click();
+    }
+
+    function importar(){
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.onchange = e => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = () => {
+          dados = JSON.parse(reader.result);
+          salvar();
+          alert("Backup importado!");
+          atualizarSemanas();
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    function toggleMenu(){
+      const menu = document.getElementById('menu');
+      const conteudo = document.getElementById('conteudo');
+      menu.classList.toggle('oculto');
+      conteudo.classList.toggle('expandido');
+    }
+  </script>
+</body>
+</html>
